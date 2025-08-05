@@ -1,0 +1,141 @@
+#################################################################################################
+#
+# Copyright © 2020  by Wenliang Du.
+# This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0
+# InternationalLicense.  If you remix, transform, or build upon the material, this copyright
+# notice must be left intact, orreproduced in a way that is reasonable to the medium in which
+# the work is being re-published.
+#
+#################################################################################################
+# With modifications by Fabian Mildner, April 2025
+
+
+services:
+    victim:
+        image: handsonsecurity/seed-ubuntu:large
+        container_name: csl-victim
+        cap_add:
+          - NET_ADMIN
+        sysctls:
+                - net.ipv4.conf.all.accept_redirects=1
+        # This is mainly for convenience, so you don't have to type out the IP addresses
+        # in some common commands
+        extra_hosts:
+          - "csl-host-5:192.168.60.5"
+          - "csl-host-6:192.168.60.6"
+        networks:
+            localnet:
+                ipv4_address: 10.9.0.5
+        # With the below command, we configure how the victim can reach addresses within
+        # the remote network 192.168.60.X.
+        # The tail -f /dev/null ensures the container keeps on running afterwards.
+        command: bash -c "
+                      ip route add 192.168.60.0/24 via 10.9.0.11 &&
+                      tail -f /dev/null
+                 "
+
+    attacker:
+        image: handsonsecurity/seed-ubuntu:large
+        container_name: csl-attacker
+        cap_add:
+          - NET_ADMIN
+        # The following setting binds our local "./volumes" folder to /volumes within the
+        # containers. We do this for the attacker and malicious-router machine so it's
+        # easier to upload / use your developed scripts.
+        volumes:
+                - ./volumes:/volumes
+        extra_hosts:
+          - "csl-host-5:192.168.60.5"
+          - "csl-host-6:192.168.60.6"
+        networks:
+            localnet:
+                ipv4_address: 10.9.0.105
+        command: bash -c "
+                      ip route add 192.168.60.0/24 via 10.9.0.11 &&
+                      tail -f /dev/null
+                 "
+
+    malicious-router:
+        image: handsonsecurity/seed-ubuntu:large
+        container_name: csl-malicious-router
+        cap_add:
+                - NET_ADMIN
+        sysctls:
+  #              - net.ipv4.ip_forward=1
+                - net.ipv4.ip_forward=0
+                - net.ipv4.conf.all.send_redirects=0
+                - net.ipv4.conf.default.send_redirects=0
+        volumes:
+                - ./volumes:/volumes
+        extra_hosts:
+          - "csl-host-5:192.168.60.5"
+          - "csl-host-6:192.168.60.6"
+        networks:
+            localnet:
+                ipv4_address: 10.9.0.111
+        command: bash -c "
+                      ip route add 192.168.60.0/24 via 10.9.0.11 &&
+                      tail -f /dev/null
+                 "
+
+    HostB1:
+        image: handsonsecurity/seed-ubuntu:large
+        container_name: csl-host-5
+        cap_add:
+                - NET_ADMIN
+        networks:
+            remotenet:
+                ipv4_address: 192.168.60.5
+        command: bash -c "
+                      ip route del default  &&
+                      ip route add 10.9.0.0/24 via 192.168.60.11 &&
+                      tail -f /dev/null
+                 "
+
+    HostB2:
+        image: handsonsecurity/seed-ubuntu:large
+        container_name: csl-host-6
+        cap_add:
+                - NET_ADMIN
+        networks:
+            remotenet:
+                ipv4_address: 192.168.60.6
+        command: bash -c "
+                      ip route del default  &&
+                      ip route add 10.9.0.0/24 via 192.168.60.11 &&
+                      tail -f /dev/null
+                 "
+
+    Router:
+        image: handsonsecurity/seed-ubuntu:large
+        container_name: csl-router
+        cap_add:
+                - NET_ADMIN
+        sysctls:
+                - net.ipv4.ip_forward=1
+        networks:
+            localnet:
+                ipv4_address: 10.9.0.11
+            remotenet:
+                ipv4_address: 192.168.60.11
+        command: bash -c "
+                      ip route del default  &&
+                      ip route add default via 10.9.0.1 &&
+                      tail -f /dev/null
+                 "
+
+
+networks:
+    # We configure two subnets. /24 means that the upper 24 bits give the network address,
+    # while the lower 8 bits provide the host address within the network.
+    remotenet:
+        name: remotenet
+        ipam:
+            config:
+                - subnet: 192.168.60.0/24
+
+    localnet:
+        name: localnet
+        ipam:
+            config:
+                - subnet: 10.9.0.0/24
