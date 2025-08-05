@@ -1,0 +1,6 @@
+index.php  
+login.php  
+hiddenContent.php  
+comments.php
+search.php 
+reset.php 
