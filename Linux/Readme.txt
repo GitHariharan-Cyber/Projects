@@ -29,11 +29,6 @@ linux-sandbox/
 ├─ py_sandbox.py
 ├─ populate_rootfs.sh
 ├─ setup_sandbox.sh
-├─ examples/
-│ ├─ run_demo.sh
-│ └─ hello.c
-├─ docs/
-│ └─ design.md
 ├─ tests/
 │ └─ test_sanity.sh
 └─ SECURITY.md
@@ -43,7 +38,7 @@ linux-sandbox/
 
 ---
 
-## 🚀 Quick Start (Ubuntu / Debian)
+##  Quick Start (Ubuntu / Debian)
 
 ### 1. Clone the repo
 
@@ -64,4 +59,5 @@ Expected output:
 uid=65534 gid=65534
 sandboxed
 PID   USER     COMMAND
+
 1 nobody   {ps} ...
