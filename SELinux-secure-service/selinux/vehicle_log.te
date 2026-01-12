@@ -1,0 +1,34 @@
+policy_module(vehicle_log, 1.0)
+
+################################
+# Types
+################################
+
+type vehicle_log_t;
+type vehicle_log_exec_t;
+type vehicle_log_data_t;
+
+################################
+# Domain setup
+################################
+
+domain_type(vehicle_log_t)
+domain_entry_file(vehicle_log_t, vehicle_log_exec_t)
+
+################################
+# File types
+################################
+
+files_type(vehicle_log_data_t)
+
+################################
+# Permissions
+################################
+
+allow vehicle_log_t vehicle_log_data_t:dir {
+    read write search add_name remove_name
+};
+
+allow vehicle_log_t vehicle_log_data_t:file {
+    create read write open getattr append
+};

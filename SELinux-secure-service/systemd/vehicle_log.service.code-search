@@ -1,0 +1,11 @@
+[Unit]
+Description=Vehicle Log SELinux Demo Service
+
+[Service]
+ExecStart=/usr/local/bin/vehicle_log
+Type=simple
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
